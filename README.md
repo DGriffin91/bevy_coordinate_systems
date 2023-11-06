@@ -1,4 +1,4 @@
-As of bevy 0.12 these are now included in bevy.
+As of bevy 0.12 the wgsl versions of these are now included in bevy.
 
 Import with `#import bevy_pbr::view_transformations`
 
@@ -10,5 +10,5 @@ Implemented for use in both bevy systems and shaders.
 
 ## WIP
 
-![demo](demo.png)
-Tutorial example
+See https://github.com/DGriffin91/bevy_picoui/blob/main/examples/coordinate_systems.rs
+![demo](coordinate_systems.png)

@@ -2,15 +2,11 @@ use bevy::{
     asset::load_internal_asset,
     math::{uvec4, vec2, Vec4Swizzles},
     prelude::*,
-    reflect::TypeUuid,
     render::camera::{CameraProjection, TemporalJitter},
     transform::systems::propagate_transforms,
 };
 
-pub mod impico;
-
-pub const VIEW_TRANSFORMATIONS: HandleUntyped =
-    HandleUntyped::weak_from_u64(Shader::TYPE_UUID, 4396331565425081187);
+pub const VIEW_TRANSFORMATIONS: Handle<Shader> = Handle::weak_from_u128(4396331565425081187);
 
 pub struct CoordinateTransformationsPlugin;
 
@@ -117,7 +113,10 @@ impl View {
     /// https://www.w3.org/TR/webgpu/#coordinate-systems
     /// (-1.0, -1.0) in NDC is located at the bottom-left corner of NDC
     /// (1.0, 1.0) in NDC is located at the top-right corner of NDC
-    /// Z is depth where 1.0 is near clipping plane, and 0.0 is inf far away
+    /// Z is depth where:
+    ///    1.0 is near clipping plane
+    ///    Perspective projection: 0.0 is inf far away
+    ///    Orthographic projection: 0.0 is far clipping plane
 
     /// UV space:
     /// 0.0, 0.0 is the top left
@@ -170,7 +169,7 @@ impl View {
     /// Convert a clip space position to view space
     pub fn position_clip_to_view(&self, clip_pos: Vec4) -> Vec3 {
         let view_pos = self.inverse_projection * clip_pos;
-        view_pos.xyz() / view_pos.w
+        view_pos.xyz()
     }
 
     /// Convert a ndc space position to view space

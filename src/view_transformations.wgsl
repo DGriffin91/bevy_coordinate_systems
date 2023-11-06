@@ -1,11 +1,12 @@
 #define_import_path bevy_coordinate_systems::view_transformations
+
 #import bevy_pbr::mesh_view_bindings as view_bindings
 
 // Relevant sources.
 // View types:
-// https://github.com/bevyengine/bevy/blob/v0.10.1/crates/bevy_render/src/view/view_bindings::view.wgsl
+// https://github.com/bevyengine/bevy/blob/v0.12.0/crates/bevy_render/src/view/view.wgsl
 // Prepared to be sent to GPU in:
-// https://github.com/bevyengine/bevy/blob/v0.10.1/crates/bevy_render/src/view/mod.rs#L316-L333
+// https://github.com/bevyengine/bevy/blob/v0.12.0/crates/bevy_render/src/view/mod.rs#L397-L411
 
 /*
 struct View {
@@ -57,7 +58,10 @@ struct View {
 /// https://www.w3.org/TR/webgpu/#coordinate-systems
 /// (-1.0, -1.0) in NDC is located at the bottom-left corner of NDC
 /// (1.0, 1.0) in NDC is located at the top-right corner of NDC
-/// Z is depth where 1.0 is near clipping plane, and 0.0 is inf far away
+/// Z is depth where: 
+///    1.0 is near clipping plane
+///    Perspective projection: 0.0 is inf far away
+///    Orthographic projection: 0.0 is far clipping plane
 
 /// UV space:
 /// 0.0, 0.0 is the top left
@@ -111,7 +115,7 @@ fn position_world_to_view(world_pos: vec3<f32>) -> vec3<f32> {
 /// Convert a clip space position to view space
 fn position_clip_to_view(clip_pos: vec4<f32>) -> vec3<f32> {
     let view_pos = view_bindings::view.inverse_projection * clip_pos;
-    return view_pos.xyz / view_pos.w;
+    return view_pos.xyz;
 }
 
 /// Convert a ndc space position to view space
@@ -190,14 +194,12 @@ fn perspective_camera_near() -> f32 {
 fn depth_ndc_to_view_z(ndc_depth: f32) -> f32 {
 #ifdef VIEW_PROJECTION_PERSPECTIVE
     return -perspective_camera_near() / ndc_depth;
-#else
-#ifdef VIEW_PROJECTION_ORTHOGRAPHIC
+#else ifdef VIEW_PROJECTION_ORTHOGRAPHIC
     return -(view_bindings::view.projection[3][2] - ndc_depth) / view_bindings::view.projection[2][2];
 #else
     let view_pos = view_bindings::view.inverse_projection * vec4(0.0, 0.0, ndc_depth, 1.0);
     return view_pos.z / view_pos.w;
-#endif // VIEW_PROJECTION_ORTHOGRAPHIC
-#endif // VIEW_PROJECTION_PERSPECTIVE
+#endif
 }
 
 /// Convert linear view z to ndc depth. 
@@ -205,14 +207,12 @@ fn depth_ndc_to_view_z(ndc_depth: f32) -> f32 {
 fn view_z_to_depth_ndc(view_z: f32) -> f32 {
 #ifdef VIEW_PROJECTION_PERSPECTIVE
     return -perspective_camera_near() / view_z;
-#else
-#ifdef VIEW_PROJECTION_ORTHOGRAPHIC
+#else ifdef VIEW_PROJECTION_ORTHOGRAPHIC
     return view_bindings::view.projection[3][2] + view_z * view_bindings::view.projection[2][2];
 #else
     let ndc_pos = view_bindings::view.projection * vec4(0.0, 0.0, view_z, 1.0);
     return ndc_pos.z / ndc_pos.w;
-#endif // VIEW_PROJECTION_ORTHOGRAPHIC
-#endif // VIEW_PROJECTION_PERSPECTIVE
+#endif
 }
 
 // -----------------
@@ -226,7 +226,7 @@ fn ndc_to_uv(ndc: vec2<f32>) -> vec2<f32> {
 
 /// Convert uv [0.0 .. 1.0] coordinate to ndc space xy [-1.0 .. 1.0]
 fn uv_to_ndc(uv: vec2<f32>) -> vec2<f32> {
-    return (uv - vec2(0.5)) * vec2(2.0, -2.0);
+    return uv * vec2(2.0, -2.0) + vec2(-1.0, 1.0);
 }
 
 /// returns the (0.0, 0.0) .. (1.0, 1.0) position within the viewport for the current render target
@@ -239,3 +239,4 @@ fn frag_coord_to_uv(frag_coord: vec2<f32>) -> vec2<f32> {
 fn frag_coord_to_ndc(frag_coord: vec4<f32>) -> vec3<f32> {
     return vec3(uv_to_ndc(frag_coord_to_uv(frag_coord.xy)), frag_coord.z);
 }
+

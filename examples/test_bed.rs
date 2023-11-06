@@ -1,9 +1,6 @@
-use std::time::Duration;
-
 use bevy::{
-    asset::ChangeWatcher,
     prelude::*,
-    reflect::{TypePath, TypeUuid},
+    reflect::TypePath,
     render::render_resource::{AsBindGroup, ShaderRef},
 };
 
@@ -13,11 +10,8 @@ use bevy_coordinate_systems::CoordinateTransformationsPlugin;
 fn main() {
     App::new()
         .insert_resource(ClearColor(Color::rgb(0.0, 0.0, 0.0)))
-        .add_plugins(DefaultPlugins.set(AssetPlugin {
-            watch_for_changes: ChangeWatcher::with_delay(Duration::from_millis(200)),
-            ..default()
-        }))
         .add_plugins((
+            DefaultPlugins,
             CameraControllerPlugin,
             CoordinateTransformationsPlugin,
             MaterialPlugin::<TestMaterial>::default(),
@@ -95,6 +89,5 @@ impl Material for TestMaterial {
     }
 }
 
-#[derive(AsBindGroup, Debug, Clone, TypeUuid, TypePath)]
-#[uuid = "e27f6ffe-1842-4822-8926-e0ed174294c8"]
+#[derive(Asset, TypePath, AsBindGroup, Debug, Clone)]
 pub struct TestMaterial {}
