@@ -1,23 +1,14 @@
 use bevy::{
-    asset::load_internal_asset,
     math::{uvec4, vec2, Vec4Swizzles},
     prelude::*,
     render::camera::{CameraProjection, TemporalJitter},
     transform::systems::propagate_transforms,
 };
 
-pub const VIEW_TRANSFORMATIONS: Handle<Shader> = Handle::weak_from_u128(4396331565425081187);
-
 pub struct CoordinateTransformationsPlugin;
 
 impl Plugin for CoordinateTransformationsPlugin {
     fn build(&self, app: &mut App) {
-        load_internal_asset!(
-            app,
-            VIEW_TRANSFORMATIONS,
-            "view_transformations.wgsl",
-            Shader::from_wgsl
-        );
         // NOTE: The view will reflect the last frame unless the system you run is after prepare_view
         // TODO Maybe update this incrementally as change detection for the camera is triggered?
         //      (Would require manually computing the GlobalTransform)
